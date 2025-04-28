@@ -1,7 +1,99 @@
-const mongoose= require("mongoose")
-const studentschema=mongoose.Schema({
-    studentname:{type:String}
+const mongoose = require("mongoose");
 
-})
-const model = mongoose.model("model",studentschema)
-module.exports=model
+const studentSchema = new mongoose.Schema({
+  admissionNumber: {
+    type: String,
+    required: [true, "Admission number is required"],
+    unique: true,
+    match: [/^EDU\d{4}$/, "Admission number must follow format EDU0001, EDU0002, etc."]
+},
+  studentName: {
+    type: String,
+    required: [true, "Student name is required"],
+    trim: true,
+    minlength: [3, "Student name must be at least 3 characters"],
+    maxlength: [50, "Student name cannot exceed 50 characters"]
+  },
+  image: {
+    type: String, // Store image URL or filename
+    default: null
+  },
+  fatherName: {
+    type: String,
+    required: [true, "Father's name is required"],
+    trim: true
+  },
+  previousClass: {
+    type: Number,
+    required: [true, "Previous class is required"],
+    min: [1, "Class must be a positive integer"]
+  },
+  presentClass: {
+    type: Number,
+    required: [true, "Present class is required"],
+    min: [1, "Class must be a positive integer"]
+  },
+  gender: {
+    type: String,
+    required: [true, "Gender is required"],
+    enum: {
+      values: ["Male", "Female", "Other"],
+      message: "Gender must be Male, Female, or Other"
+    }
+  },
+  age: {
+    type: Number,
+    required: [true, "Age is required"],
+    min: [3, "Age must be at least 3 years"]
+  },
+  aadharCardNumber: {
+    type: String,
+    required: [true, "Aadhar card number is required"],
+    match: [/^\d{12}$/, "Aadhar card number must be exactly 12 digits"]
+  },
+  address: {
+    type: String,
+    required: [true, "Address is required"],
+    trim: true
+  },
+  parentPhoneNumber: {
+    type: String,
+    required: [true, "Parent phone number is required"],
+    match: [/^\d{10}$/, "Phone number must be exactly 10 digits"]
+  },
+  parentEmailAddress: {
+    type: String,
+    lowercase: true,
+    trim: true,
+    match: [/\S+@\S+\.\S+/, "Please provide a valid email address"]
+  },
+  dateOfBirth: {
+    type: Date,
+    required: [true, "Date of birth is required"]
+  },
+  nationality: {
+    type: String,
+    required: [true, "Nationality is required"],
+    trim: true
+  },
+  previousSchoolName: {
+    type: String,
+    trim: true
+  },
+  previousSchoolAddress: {
+    type: String,
+    trim: true
+  },
+  religion: {
+    type: String,
+    trim: true
+  },
+  languagesSpokenAtHome: {
+    type: [String],
+    default: []
+  }
+}, { timestamps: true });
+
+const Student = mongoose.model("Student", studentSchema);
+
+module.exports = Student;

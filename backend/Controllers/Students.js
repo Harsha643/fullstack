@@ -1,92 +1,101 @@
-    const Student = require('../Models/Student');
 
-//get all students
-    exports.getAllStudents = async (req, res) => {
-        try {
-            const students = await Student.find();
-            res.status(200).json(students);
-        } catch (error) {
-            res.status(500).json({ message: "Error fetching students", error });
+const Student = require("../Models/students"); // Adjust path if necessary
+
+
+// Get all students
+exports.getAllStudents = async (req, res) => {
+    console.log(req.url);
+    try {
+        const students = await Student.find();
+        res.status(200).json(students);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching students", error });
+    }
+}
+
+// Get a student by ID
+exports.getStudentById = async (req, res) => {
+    const { presentClass } = req.params;  // Extract presentClass from the URL
+
+    try {
+        // Find all students with the specified presentClass
+        const students = await Student.find({ presentClass });
+
+        // If no students found, return a 404 response
+        if (students.length === 0) {
+            return res.status(404).json({ message: `No students found in class ${presentClass}` });
         }
-    }
 
-    //get a student by id
-        exports.getStudentById = async (req, res) => {
-        const { classId } = req.params;
-        try {
-            const student = await Student.findById(classId);
-            if (!student) {
-                return res.status(404).json({ message: "Student not found" });
-            }
-            res.status(200).json(student);
-        }catch(error){
-            res.status(502).json({ message: "Error fetching student", error });
-        }
+        // Send the students data in the response
+        res.status(200).json(students);
+    } catch (error) {
+        // Handle any errors during the database query
+        res.status(500).json({ message: "Error fetching students", error });
     }
+};
 
-    //create a new student
-    function getNextAdmissionNumber(students) {
-        if (students.length === 0) return 'EDU0001';
-    
-        // Get highest existing number
-        const numbers = students
-            .map(s => s.admissionNumber)
-            .filter(n => n && /^EDU\d+$/.test(n)) // Filter valid ones
-            .map(n => parseInt(n.replace('EDU', ''), 10));
-    
-        const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
-        const nextNumber = maxNumber + 1;
-    
-        return `EDU${String(nextNumber).padStart(4, '0')}`;
-    }
-    
-    exports.createStudent = async(req, res) => {
-        const dbData = readData();
-        const newId = dbData.students.length > 0 ? Math.max(...dbData.students.map(s => s.id)) + 1 : 1;
-        const admissionNumber = getNextAdmissionNumber(dbData.students);
-    
+
+
+
+// Function to generate next admission number
+function getNextAdmissionNumber(students) {
+    if (students.length === 0) return 'EDU0001';
+
+    const numbers = students
+        .map(s => s.admissionNumber)
+        .filter(n => n && /^EDU\d+$/.test(n))
+        .map(n => parseInt(n.replace('EDU', ''), 10));
+
+    const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
+    const nextNumber = maxNumber + 1;
+
+    return `EDU${String(nextNumber).padStart(4, '0')}`;
+}
+
+// Create a new student
+exports.createStudent = async (req, res) => {
+    try {
+        const students = await Student.find();
+        const admissionNumber = getNextAdmissionNumber(students);
+
         const newStudent = {
             ...req.body,
-            id: newId,
             admissionNumber,
             image: req.file ? req.file.filename : null
         };
-    
-        // dbData.students.push(newStudent);
-    
-        // writeData(dbData);
-        const savedStudent = await model.create(newStudent) 
-    
-    
-        res.status(201).json({ message: "Student added successfully", student: newStudent });
-    }
 
-    //update a student by id
-    exports.updateStudent = async (req, res) => {
-        const { classId } = req.params;
-        try {
-            const updatedStudent = await Student.findByIdAndUpdate(classId, req.body, { new: true });   
-            if (!updatedStudent) {
-                return res.status(404).json({ message: "Student not found" });
-            }
-            res.status(200).json(updatedStudent);
-        }catch(error){
-            res.status(502).json({ message: "Error fetching student", error });
+        const savedStudent = await Student.create(newStudent);
 
-        }
+        res.status(201).json({ message: "Student added successfully", student: savedStudent });
+    } catch (error) {
+        res.status(500).json({ message: "Error creating student", error });
     }
-    //delete a student by id
-    exports.deleteStudent = async (req, res) => {
-        const { classId } = req.params;
-        try {
-            const deletedStudent = await Student.findByIdAndDelete(classId);
-            if (!deletedStudent) {
-                return res.status(404).json({ message: "Student not found" });
-            }
-            res.status(200).json({ message: "Student deleted successfully" });
-        }
-        catch(error){
+}
 
-            res.status(502).json({ message: "Error fetching student", error });
+// Update a student by ID
+exports.updateStudent = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const updatedStudent = await Student.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedStudent) {
+            return res.status(404).json({ message: "Student not found" });
         }
+        res.status(200).json(updatedStudent);
+    } catch (error) {
+        res.status(502).json({ message: "Error updating student", error });
     }
+}
+
+// Delete a student by ID
+exports.deleteStudent = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deletedStudent = await Student.findByIdAndDelete(id);
+        if (!deletedStudent) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+        res.status(200).json({ message: "Student deleted successfully" });
+    } catch (error) {
+        res.status(502).json({ message: "Error deleting student", error });
+    }
+}
