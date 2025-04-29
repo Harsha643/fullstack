@@ -15,21 +15,20 @@ exports.getAllStudents = async (req, res) => {
 
 // Get a student by ID
 exports.getStudentById = async (req, res) => {
+    console.log(req.params);
     const { presentClass } = req.params;  // Extract presentClass from the URL
 
     try {
         // Find all students with the specified presentClass
         const students = await Student.find({ presentClass });
 
-        // If no students found, return a 404 response
         if (students.length === 0) {
             return res.status(404).json({ message: `No students found in class ${presentClass}` });
         }
 
-        // Send the students data in the response
         res.status(200).json(students);
     } catch (error) {
-        // Handle any errors during the database query
+
         res.status(500).json({ message: "Error fetching students", error });
     }
 };
@@ -74,15 +73,18 @@ exports.createStudent = async (req, res) => {
 
 // Update a student by ID
 exports.updateStudent = async (req, res) => {
+    console.log(req.params);
     const { id } = req.params;
+    console.log(id);
     try {
-        const updatedStudent = await Student.findByIdAndUpdate(id, req.body, { new: true });
+        const updatedStudent = await Student.findByIdAndUpdate({ _id:id}, req.body, { new: true, runValidators: true });
+
         if (!updatedStudent) {
             return res.status(404).json({ message: "Student not found" });
         }
         res.status(200).json(updatedStudent);
     } catch (error) {
-        res.status(502).json({ message: "Error updating student", error });
+        res.status(502).json({ message: "Error updating student"+error.message });
     }
 }
 
@@ -96,6 +98,6 @@ exports.deleteStudent = async (req, res) => {
         }
         res.status(200).json({ message: "Student deleted successfully" });
     } catch (error) {
-        res.status(502).json({ message: "Error deleting student", error });
+        res.status(502).json({ message: "Error deleting student" + error.message });
     }
 }
